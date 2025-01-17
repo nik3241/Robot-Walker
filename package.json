@@ -1,0 +1,28 @@
+{
+  "version": "0.10.0",
+  "description": "My webGL project | Robot Walker",
+  "name": "robot_walker",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "dev1": "parcel index.html assets"
+  },
+  "homepage": ".",
+  "dependencies": {
+    "babel-loader": "^9.2.1",
+    "robot_walker": "file:",
+    "three": "^0.172.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.172.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^6.7.3",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.1",
+    "style-loader": "^3.3.2",
+    "webpack": "^5.81.0",
+    "webpack-cli": "^5.0.2",
+    "webpack-dev-server": "^4.13.3",
+    "webpack-merge": "^5.8.0"
+  }
+}

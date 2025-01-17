@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Walker</title>
+    <link rel="stylesheet" href="./src/styles/all.css">
+</head>
+
+<body>
+
+    <main class="wrapper">
+
+        <header>
+            <div class="logo">
+                <span class="text">Robot Walk</span>
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a href="#">Главная</a></li>
+                    <li><a href="#">Главная</a></li>
+                    <li><a href="#">Главная</a></li>
+                </ul>
+            </nav>
+        </header>
+        <section class="content">
+            <article id="game">
+                <div class="viewport-wrapper">
+                    <canvas name="main-viewport" height="450" style="width: 100%; height: 100%;">Ваш браузер не
+                        поддерживает элемент canvas</canvas>
+                    <div class="keyboard-controllers-wrapper">
+                        <div class="keyboard-controllers">
+                            <div class="key-special">
+                                <div class="key key-shift">Shift</div>
+                                <div class="key key-ctrl">Ctrl</div>
+                            </div>
+                            <div class="key-move">
+                                <div class="key key-empty"></div>
+                                <div class="key key-w pressed">W</div>
+                                <div class="key key-e">E</div>
+                                <div class="key key-a">A</div>
+                                <div class="key key-s">S</div>
+                                <div class="key key-d">D</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gui"></div>
+                </div>
+                <aside name="statistics" class="hidden">
+                    <div class="header">
+                        <span class="title">Статистика</span>
+                        <span class="close">></span>
+                    </div>
+
+                    <div class="log">
+
+                    </div>
+
+                </aside>
+            </article>
+        </section>
+
+        <footer>
+            <span class="text">Created by Nikita Agafonov</span>
+        </footer>
+
+    </main>
+    <script src="./src/index.js" type="module" defer></script>
+</body>
+
+</html>
