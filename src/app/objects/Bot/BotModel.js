@@ -13,8 +13,6 @@ export class BotModel {
     controls = null
 
     constructor(myGame) {
-        // console.log(this.src)
-        // console.log(botmodel)
         this.loadModel()
         this.addControls()
         return this

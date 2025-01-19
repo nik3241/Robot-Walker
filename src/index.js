@@ -9,8 +9,8 @@ import "./styles/all.css"
 import { Game } from "./app/Game"
 import { Terrain } from "./app/objects/Terrain"
 import { BotModel } from './app/objects/Bot/BotModel';
-import { BotControls } from './app/objects/Bot/BotControls';
-// import { BotModel } from './app/objects/Bot/LoadBotModel';
+import { LowPolyPineTree } from "./app/objects/Trees/LowPolyPineTree"
+import { LowPolyTrees } from './app/objects/Trees/LowPolyTrees';
 
 const _DEBUG = true
 function main() {
@@ -101,22 +101,12 @@ function main() {
     const bot = new BotModel(myGame)
     console.log(bot.object)
 
+    objectFolder.add(bot.object, "visible").name("робот")
 
     myGame.objects.add(bot.object)
-
-    // const ctrl = new BotControls(bot.object)
-    // ctrl.connect()
-    // ctrl.animate()
-    // bot.addControls()
-    // myGame.controls.push(bot.controls)
-
     bot.object.add(new THREE.AxesHelper(3))
-
-    // botFunc(bot.object)
-
-
-    // myGame.controls.push(bot.controls)
-    // generalFolder.add(myGame.controls[length - 1], "enabled").listen().name("botControls Robot")
+    myGame.controls.push(bot.controls)
+    generalFolder.add(bot.controls, "enabled").listen().name("botControls Robot")
 
 
 
@@ -178,8 +168,25 @@ function main() {
         /////////
         // end BOX
         /////////
-        myGame.addLog("на сцену добавлен куб с материалом")
+        const trees = new LowPolyTrees()
+        for (let i = 0; i < 6; i++) {
+            const tree1 = trees.getPineTree("", { x: trees._getRandomArbitrary(-250, 250), y: 0, z: trees._getRandomArbitrary(-250, 250) })
+            const tree2 = trees.getTree("Tree_1", { x: trees._getRandomArbitrary(-250, 250), y: 0, z: trees._getRandomArbitrary(-250, 250) })
+            const tree3 = trees.getSnowyTree("Tree_1", { x: trees._getRandomArbitrary(-250, 250), y: 0, z: trees._getRandomArbitrary(-250, 250) })
+            // trees._setHeight(tree1, trees._getRandomArbitrary(5, 25))
+            // trees._setHeight(tree2, trees._getRandomArbitrary(5, 25))
+            // trees._setHeight(tree3, trees._getRandomArbitrary(5, 25))
+            myGame.scene.add(tree3)
+            myGame.scene.add(tree2)
+            myGame.scene.add(tree1)
+        }
 
+        myGame.camera.position.set(0, 100, 300)
+        myGame.camera.lookAt(0, 0, 0)
+
+
+        // const pineTree = new LowPolyPineTree();
+        // myGame.objects.add(pineTree.getTree());
     }
 
 

@@ -25,21 +25,18 @@ class BotControls {
         this.angleOfRotation = this.object.rotation.y
         this.rotateSpeed = Math.PI / 180 * 90 / 60 // 90градусов в секунду - дополнительный коэффициент поворота 
 
-        this.clock = new THREE.Clock()// просто время для отслежнивания изменений жизненного цикла приложени
-        // this.connect();
-        // пул нажатых и отпущенных кнопок {"KeyW": true, "KeyD": true ...}
         this.keyboard = {}
     }
 
 
     connect() {
-        console.log("connect")
+        // console.log("connect")
         window.addEventListener('keydown', e => this.onkeydown(e)); // добавим прослушиватель события нажатия клавиш
         window.addEventListener('keyup', e => this.onkeyup(e));   // ~ отжатия клавиш
 
     }
     disconnect() {
-        console.log("disconnect")
+        // console.log("disconnect")
         window.removeEventListener('keydown', e => this.onkeydown(e)); // добавим прослушиватель события нажатия клавиш
         window.removeEventListener('keyup', e => this.onkeyup(e));   // ~ отжатия клавиш
     }
@@ -49,46 +46,13 @@ class BotControls {
 
     onkeydown(kEvent) {
         this.keyboard[kEvent.code] = true
-        // console.log(kEvent)
-        // switch (kEvent.code) {
-        //     case 'KeyW': // кнопка вверх
-        //         // keyPressed.KeyW[0] = true
-        //         this.move(1);
-        //         break;
-        //     case 'KeyS': // кнопка вниз.
-        //         // keyPressed.KeyS[0] = true
-        //         this.move(-1);
-        //         break;
-        //     case 'KeyA': // влево
-        //         // keyPressed.KeyA[0] = true
-        //         this.turning(1);
-        //         break;
-        //     case 'KeyD': // вправо
-        //         // keyPressed.KeyD[0] = true
-        //         this.turning(-1);
-        //         break;
-        // }
     }
     onkeyup(kEvent) {
-
         this.keyboard[kEvent.code] = false
-        // switch (kEvent.code) {
-        //     case 'KeyW': // кнопка вверх
-        //     case 'KeyS': // кнопка вниз
-        //         this.move(0);
-        //         break;
-        //     case 'KeyA': // влево
-        //     case 'KeyD': // вправо
-        //         this.turning(0);
-        //         break;
-        // }
     }
 
-    // движение: value -1,0,1 - направление движения и остановка
+  
     movePlayer(delta) {
-        // console.log("movePlayer")
-        // вперед и не назад
-        console.log(this.keyboard["KeyW"] && !this.keyboard["KeyS"])
         if (this.keyboard["KeyW"] && !this.keyboard["KeyS"]) {
             this.isAccelerating = true
             this.velocity.z += this.acceleration
@@ -97,8 +61,6 @@ class BotControls {
             if (this.velocity.z >= this.maxSpeedForward) {
                 this.velocity.z = this.maxSpeedForward
             }
-            // this.object.translateZ(this.velocity.z)
-            console.log("Front speed", this.velocity.z)
         }
         // назад и не в перед
         if (this.keyboard["KeyS"] && !this.keyboard["KeyW"]) {
@@ -109,9 +71,6 @@ class BotControls {
             if (this.velocity.z <= this.maxSpeedBackward) {
                 this.velocity.z = -this.maxSpeedBackward
             }
-
-            // this.object.translateZ(this.velocity.z)
-            console.log("Back speed", this.velocity.z)
         }
         // влево, и не в право
         if (this.keyboard["KeyA"] && !this.keyboard["KeyD"]) {
@@ -149,8 +108,8 @@ class BotControls {
 
         this.object.translateZ(this.velocity.z * delta)
         this.object.rotation.y = this.angleOfRotation
-        console.log(this.keyboard)
-        console.log(this.velocity.z)
+        // console.log(this.keyboard)
+        // console.log(this.velocity.z)
     }
 
     // move(value) {
