@@ -100,10 +100,12 @@ function main() {
     // Загрузка модели и первичное манипулирование
     const bot = new BotModel(myGame)
     console.log(bot.object)
+
+
     myGame.objects.add(bot.object)
 
-    const ctrl = new BotControls(bot.object)
-    ctrl.connect()
+    // const ctrl = new BotControls(bot.object)
+    // ctrl.connect()
     // ctrl.animate()
     // bot.addControls()
     // myGame.controls.push(bot.controls)
@@ -189,12 +191,13 @@ function main() {
     function animate() {
         const delta = myGame.clock.getDelta()
 
-        ctrl.update(delta)
+        // console.log(bot.controls.keyboard)
+        bot.controls.movePlayer(delta)
         // меняем параметры куба - вращение
         if (myGame.scene.getObjectByName("Cube")) {
             const box = myGame.scene.getObjectByName("Cube")
             const axis = myGame.scene.getObjectByName("boxLocalAxis")
-            // box.rotation.x += delta * 2;
+            box.rotation.x += -delta * delta * 10;
             box.rotation.y += delta;
             box.translateZ(delta * 2)
             // box.translateOnAxis(new THREE.Vector3(0, 0, 1), delta * 10)

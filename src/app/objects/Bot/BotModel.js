@@ -50,11 +50,9 @@ export class BotModel {
                     object.receiveShadow = true
                 }
             })
-        }
+        })
 
-        )
-
-
+        this.addControls()
     }
 
 
