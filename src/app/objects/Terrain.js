@@ -26,8 +26,8 @@ export class Terrain extends THREE.Mesh {
 
     createTerrain() {
         const defaultHeightMap = [
-            new THREE.TextureLoader().load("./../../../public/terrain/height-map.png"),
-            new THREE.TextureLoader().load("./../../../public/terrain/height-map-colored.png"),
+            new THREE.TextureLoader().setPath("/terrain/").load("height-map.png"),
+            new THREE.TextureLoader().setPath("/terrain/").load("height-map-colored.png"),
         ]
         const geometry = new THREE.PlaneGeometry(this.width, this.height, 32 * this.kSegments, 32 * this.kSegments);
         const material = new THREE.MeshPhongMaterial({
@@ -53,8 +53,8 @@ export class Terrain extends THREE.Mesh {
     }
     createOcean() {
         const defaultHeightMap = [
-            new THREE.TextureLoader().load("./../../../public/terrain/ocean.png"),
-            new THREE.TextureLoader().load("./../../../public/terrain/ocean-colored.png"),
+            new THREE.TextureLoader().setPath("/terrain/").load("ocean.png"),
+            new THREE.TextureLoader().setPath("/terrain/").load("ocean-colored.png"),
         ]
 
         const geometry = new THREE.PlaneGeometry(
@@ -63,14 +63,11 @@ export class Terrain extends THREE.Mesh {
         );
         const material = new THREE.MeshPhongMaterial(
             {
-                // color: 0x6e6eff,
                 map: defaultHeightMap[1],
                 emissiveMap: defaultHeightMap[1],
                 emissiveIntensity: 0.1,
                 displacementMap: defaultHeightMap[0],
                 displacementScale: (this.width + this.height) / 100,
-                // shininess: 0.1,
-                // metalness: 0.1
             });
 
         const mesh = new THREE.Mesh(geometry, material)

@@ -3,56 +3,64 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { BotControls } from './BotControls';
-
 // // Загрузка модели и первичное манипулирование
 export class BotModel {
     name = "little_robot_5.glb"
-    src = "/public/" + this.name
+    src = "/" + this.name
     materials = []
     animations = []
     object = new THREE.Group()
-
+    controls = null
 
     constructor(myGame) {
+        // console.log(this.src)
+        // console.log(botmodel)
+        this.loadModel()
+        this.addControls()
+        return this
+    }
+    loadModel() {
 
-        const loader = new GLTFLoader()
+        const loader = new GLTFLoader().setPath("/")
+        loader.load("little_robot_5.glb", (glb) => {
+            console.log(glb)
+            // выгружаем анимации
+            this.animations.push(...glb.animations)
+            console.log("анимации", this.animations)
 
-        loader.load(
-            this.src,
-            (glb) => {
-                // выгружаем анимации
-                this.animations.push(...glb.animations)
-                console.log("анимации", this.animations)
+            this.object.add(glb.scene) // группа с самим роботом
 
-                this.object.add(glb.scene) // группа с самим роботом
+            // развернулмодель и поставил в центре карты
+            // glb.scene.rotation.x = -Math.PI / 2
+            this.object.rotation.y = Math.PI
+            this.object.position.set(0, 0, 0)
+            this.object.name = "BotModel"
 
-                // myGame.scene.add(this.object)
-                // this.object.rotation.x = -Math.PI / 2
-                this.object.position.set(0, 0, 0)
-                this.object.name = "BotModel"
-
-                // получение материалов модели
-                glb.scene.traverse(object => {
-                    // это меш
-                    if (object.isMesh) {
-                        // console.log(object.name, object.type, object.material.name)
-                        // добавляю уникальные материалы
-                        if (!this.materials.includes(object.material)) {
-                            this.materials.push(object.material)
-                        }
-                        // настраиваю тени мешу
-                        // object.castShadow = true
-                        // object.receiveShadow = true
+            // получение материалов модели
+            this.object.traverse(object => {
+                // это меш
+                if (object.isMesh) {
+                    // console.log(object.name, object.type, object.material.name)
+                    // добавляю уникальные материалы (ссылки на метериалы)
+                    if (!this.materials.includes(object.material)) {
+                        this.materials.push(object.material)
                     }
-                })
-
-                console.log("объект", this.object)
-
-
-            },
+                    // настраиваю тени мешу
+                    object.castShadow = true
+                    object.receiveShadow = true
+                }
+            })
+        }
 
         )
 
-        return this
+
+    }
+
+
+    addControls() {
+        this.controls = new BotControls(this.object)
+        this.controls.connect()
+        // this.controls.animate()
     }
 }

@@ -6,12 +6,10 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 // Мои импорты
 import "./styles/all.css"
-import { Game } from "./app/game"
+import { Game } from "./app/Game"
 import { Terrain } from "./app/objects/Terrain"
-import { BotControls } from './app/objects/Bot/BotControls'
 import { BotModel } from './app/objects/Bot/BotModel';
-import { rotate } from 'three/tsl';
-import { VelocityShader } from 'three/examples/jsm/Addons.js';
+import { BotControls } from './app/objects/Bot/BotControls';
 // import { BotModel } from './app/objects/Bot/LoadBotModel';
 
 const _DEBUG = true
@@ -21,19 +19,13 @@ function main() {
 
     window.myGame = myGame
 
-
-
-    // console.log("Конструктор игры", myGame)
-
     const stats = new Stats()
     stats.domElement.style = "position: absolute; top: 3px; left: 3px; cursor: pointer; opacity: 0.9; z-index: 10000;"
-    // console.log()
+    console.log()
     elem.children[0].appendChild(stats.domElement)
 
     const gui = new GUI({ container: elem.querySelector(".gui") })
 
-
-    // console.log("размер области рендера: \n", myGame.renderer.width, myGame.renderer.height)
 
     const generalFolder = gui.addFolder("General")
     const cameraFolder = gui.addFolder("Camera")
@@ -107,14 +99,19 @@ function main() {
 
     // Загрузка модели и первичное манипулирование
     const bot = new BotModel(myGame)
-    // let length = myGame.controls.push(new BotControls(bot, myGame.canvas))
-    bot.object.add(new THREE.AxesHelper(3))
-    bot.object.children[0].position.set(0, 1, 1)
     console.log(bot.object)
     myGame.objects.add(bot.object)
-    botFunc(bot.object)
 
-    // myGame.scene.add(bot.object)
+    const ctrl = new BotControls(bot.object)
+    ctrl.connect()
+    // ctrl.animate()
+    // bot.addControls()
+    // myGame.controls.push(bot.controls)
+
+    bot.object.add(new THREE.AxesHelper(3))
+
+    // botFunc(bot.object)
+
 
     // myGame.controls.push(bot.controls)
     // generalFolder.add(myGame.controls[length - 1], "enabled").listen().name("botControls Robot")
@@ -146,10 +143,10 @@ function main() {
         /////////
         // end plane
         /////////
-    }
-    if (_DEBUG)
-    // CUBE
-    {
+
+
+        // CUBE
+
 
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshStandardMaterial({
@@ -173,20 +170,14 @@ function main() {
         const boxLocalAxisHelper = new THREE.AxesHelper(10)
         boxLocalAxisHelper.name = "boxLocalAxis"
         mesh.add(boxLocalAxisHelper)
-        // boxLocalAxisHelper.position.set(mesh.position)
-        // boxLocalAxisHelper.rotation.y = mesh.rotation.y
-        // myGame.scene.add(boxLocalAxisHelper)
-        // console.log(boxLocalAxisHelper)
+
 
 
         /////////
         // end BOX
         /////////
         myGame.addLog("на сцену добавлен куб с материалом")
-        // myGame.controls.push(new BotControls(mesh, myGame.canvas))
 
-        // myGame.controls.at(-1).connect()
-        // myGame.controls.at(-1).enabled = true
     }
 
 
@@ -198,13 +189,14 @@ function main() {
     function animate() {
         const delta = myGame.clock.getDelta()
 
+        ctrl.update(delta)
         // меняем параметры куба - вращение
         if (myGame.scene.getObjectByName("Cube")) {
             const box = myGame.scene.getObjectByName("Cube")
             const axis = myGame.scene.getObjectByName("boxLocalAxis")
             // box.rotation.x += delta * 2;
             box.rotation.y += delta;
-            box.translateZ(delta)
+            box.translateZ(delta * 2)
             // box.translateOnAxis(new THREE.Vector3(0, 0, 1), delta * 10)
             // axis.position.set(...box.position)
             // axis.setRotationFromEuler(box.rotation)
@@ -223,19 +215,6 @@ function main() {
 
         }
 
-
-
-
-        if (myGame.objects.getObjectByName("BotModel")) {
-            const bot = myGame.objects.getObjectByName("BotModel")
-            const speed = 1
-            // const rot = bot.rotation.y += delta
-            // bot.position.z += delta * speed * Math.cos(-rot);
-            // bot.position.x -= -delta * speed * Math.sin(rot);
-
-
-            // bot.quaternion.random
-        }
 
         if (myGame.camera.position.y <= 0)
             myGame.camera.position.y = 0
@@ -260,157 +239,6 @@ function main() {
         // "f": false,
         // "Escape": false
     }
-
-
-    function botFunc(robot) {
-
-
-        window.addEventListener('keydown', e => onkeydown(e)); // добавим прослушиватель события нажатия клавиш
-        window.addEventListener('keyup', e => onkeyup(e));   // ~ отжатия клавиш
-
-        // ускорение
-        let acceleration = 0.1,
-            // замедление
-            decceleration = 0.05
-        // скорость движения
-        let isAccelerating = false // двигаемся?
-        const maxSpeedForward = 100
-        const maxSpeedBackward = maxSpeedForward * 0.2
-        const velocity = new THREE.Vector3(0, 0, 0); // вектор перемещения  (группы `car`)
-        const direction = new THREE.Vector3(0, 0, 1); // вектор направления  ~
-        let angleOfRotation = 0
-        const rotateMoveCoe = 0.05 // дополнительный коэффициент поворота
-        const clock = new THREE.Clock()// просто время для отслежнивания изменений жизненного цикла приложения
-        generalFolder.add({ angleOfRotation }, "angleOfRotation").listen().updateDisplay()
-
-        // function onkeydown(e) {
-        //     const delta = myGame.clock.getDelta()
-        //     keyMap[e.keyCode] = e.type == 'keydown';
-        //     console.log(keyMap)
-        //     // shift +
-        //     if (keyMap[16]) {
-        //         console.log()
-        //         acceleration = 0.1
-        //         move()
-        //     } else {
-        //         acceleration = 0.01
-        //         move()
-        //     }
-
-        // }
-        function onkeydown(kEvent) {
-            // console.log(kEvent)
-            switch (kEvent.code) {
-                case 'KeyW': // кнопка вверх
-                    // keyPressed.KeyW[0] = true
-                    move(1);
-                    break;
-                case 'KeyS': // кнопка вниз.
-                    // keyPressed.KeyS[0] = true
-                    move(-1);
-                    break;
-                case 'KeyA': // влево
-                    // keyPressed.KeyA[0] = true
-                    turning(1);
-                    break;
-                case 'KeyD': // вправо
-                    // keyPressed.KeyD[0] = true
-                    turning(-1);
-                    break;
-            }
-        }
-
-
-        function onkeyup(kEvent) {
-            switch (kEvent.code) {
-                case 'KeyW': // кнопка вверх
-                case 'KeyS': // кнопка вниз
-                    move(0);
-                    break;
-                case 'KeyA': // влево
-                case 'KeyD': // вправо
-                    turning(0);
-                    break;
-            }
-        }
-
-
-        // движение
-        function move(value) {
-            if (value === 1) {
-
-                isAccelerating = true
-                // console.log("move W")
-                velocity.z += value * acceleration
-
-                // ограничиваем максимальную скорость вперед
-                if (velocity.z >= maxSpeedForward) {
-                    velocity.z = maxSpeedForward
-                }
-
-                console.log("Front speed", velocity.z)
-            }
-            else if (value === -1) {
-                isAccelerating = true
-                // console.log("move S")
-                velocity.z += value * acceleration
-
-
-                // ограничиваем максимальную скорость назад
-                if (velocity.z <= -maxSpeedBackward)
-                    velocity.z = -maxSpeedBackward
-
-                console.log("Back speed", velocity.z)
-            }
-            else if (value === 0) {
-
-                isAccelerating = false
-                // velocity.z = 0
-                // actualMovementSpeed = 0
-                if (velocity.z > 0)
-                    velocity.z -= decceleration
-                else
-                    velocity.z += decceleration
-
-                if (velocity.z <= 0.05 && velocity.z >= -0.05)
-                    velocity.z = 0
-                // стоя не поворачиваем
-                // turning(0)
-            }
-
-        }
-        // поворачивание
-        function turning(value) {
-            angleOfRotation += value * rotateMoveCoe
-
-            robot.rotation.y = angleOfRotation;
-        }
-
-
-        // фнукция обновления данных
-        function update(delta) {
-            robot.translateZ(velocity.z * delta)
-            // var t = robot.position.addScaledVector(direction, delta)
-            myGame.camera.lookAt(robot.position)
-
-
-            if (isAccelerating) {
-                // Если нажата кнопка, остановка не производится
-                isAccelerating = false;
-            } else {
-                // Постепенно останавливаем автомобиль, если кнопка не нажата
-                stop();
-            }
-        }
-
-        // функция анимирования сцены
-        (function animate() {
-            var delta = clock.getDelta(); // вычисляем дельту времени
-            update(delta);
-            requestAnimationFrame(animate); // рекурсивный вызов для продолжения анимации
-        })();
-    }
-
 
 
 
@@ -459,18 +287,18 @@ function main() {
     }
     /////////////////////////////////
 
-    window.addEventListener("resize", setSizeRender)
+    myGame.canvas.addEventListener("resize", setSizeRender)
 
-    window.addEventListener("dblclick", (event) => {
-        if (event.target === myGame.canvas) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen()
-                setSizeRender()
-            } else {
-                myGame.canvas.requestFullscreen()
-                setSizeRender()
-            }
+    myGame.canvas.addEventListener("dblclick", (event) => {
+        // if (event.target === myGame.canvas) {
+        if (document.fullscreenElement) {
+            document.exitFullscreen()
+            setSizeRender()
+        } else {
+            myGame.canvas.requestFullscreen()
+            setSizeRender()
         }
+        // }
     })
 
     window.addEventListener('keydown', (event) => {
@@ -479,9 +307,3 @@ function main() {
 
 }
 document.addEventListener("DOMContentLoaded", main)
-
-
-
-
-
-// module.exports = { ...myGame }

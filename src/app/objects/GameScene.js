@@ -9,7 +9,7 @@ export class GameScene extends THREE.Scene {
         this.background = new THREE.Color(0xb0f3f2);
 
         const environmentTexture = new THREE.CubeTextureLoader()
-            .setPath('https://sbcode.net/img/')
+            .setPath('/enviroment/')
             .load(['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'])
         this.environment = environmentTexture
         this.background = environmentTexture

@@ -49,7 +49,7 @@ export class Game {
     renderViewPort = new Vector2(0, 0)
 
     constructor(domGame) {
-        console.log(this.scene.getObjectByName("lights"))
+        // console.log(this.scene.getObjectByName("lights"))
         if (domGame) {
             this.domElement = domGame
         } else {

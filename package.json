@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "dev1": "parcel index.html assets"
+    "dev1": "parcel index.html assets",
+    "clearAll": "rmdir /s /q build && rmdir /s /q node_modules "
   },
   "homepage": ".",
   "dependencies": {
@@ -16,13 +17,13 @@
   "devDependencies": {
     "@types/three": "^0.172.0",
     "copy-webpack-plugin": "^12.0.2",
-    "css-loader": "^6.7.3",
+    "css-loader": "^6.11.0",
     "html-loader": "^4.2.0",
-    "html-webpack-plugin": "^5.5.1",
-    "style-loader": "^3.3.2",
-    "webpack": "^5.81.0",
-    "webpack-cli": "^5.0.2",
-    "webpack-dev-server": "^4.13.3",
+    "html-webpack-plugin": "^5.6.3",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.2",
     "webpack-merge": "^5.8.0"
   }
 }
