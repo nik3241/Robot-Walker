@@ -24,14 +24,14 @@ function main() {
     console.log()
     elem.children[0].appendChild(stats.domElement)
 
-    const gui = new GUI({ container: elem.querySelector(".gui") })
+    // const gui = new GUI({ container: elem.querySelector(".gui") })
 
 
-    const generalFolder = gui.addFolder("General")
-    const cameraFolder = gui.addFolder("Camera")
-    const helperFolder = gui.addFolder("Helpers").close()
-    const objectFolder = gui.addFolder("Objects")
-    const lightFolder = gui.addFolder("Lights").close()
+    const generalFolder = myGame.gui.addFolder("General")
+    const cameraFolder = myGame.gui.addFolder("Camera")
+    const helperFolder = myGame.gui.addFolder("Helpers").close()
+    const objectFolder = myGame.gui.addFolder("Objects")
+    const lightFolder = myGame.gui.addFolder("Lights").close()
 
     generalFolder.reset().add(myGame, "statisticsVisible")
         .onChange(() => { myGame.toggleStatistics() })
@@ -99,9 +99,17 @@ function main() {
 
     // Загрузка модели и первичное манипулирование
     const bot = new BotModel(myGame)
-    console.log(bot.object)
+    bot.controls.followPlayer(myGame.camera)
 
-    objectFolder.add(bot.object, "visible").name("робот")
+    console.log(bot.object)
+    const objectSubFolder = objectFolder.addFolder("Robot")
+    objectSubFolder.add(bot.object, "visible").name("робот")
+    // objectSubFolder.add(bot.object.position, 'x').name("X").listen().step(0.01)
+    // objectSubFolder.add(bot.object.position, 'y').name("Y").listen().step(0.01)
+    // objectSubFolder.add(bot.object.position, 'z').name("Z").listen().step(0.01)
+    // objectSubFolder.add(bot.object.rotation, 'x').name("rotatinon X").listen().step(0.01)
+    // objectSubFolder.add(bot.object.rotation, 'y').name("rotatinon Y").listen().step(0.01)
+    // objectSubFolder.add(bot.object.rotation, 'z').name("rotatinon Z").listen().step(0.01)
 
     myGame.objects.add(bot.object)
     bot.object.add(new THREE.AxesHelper(3))
@@ -181,7 +189,7 @@ function main() {
             myGame.scene.add(tree1)
         }
 
-        myGame.camera.position.set(0, 100, 300)
+        myGame.camera.position.set(1, 2, 5)
         myGame.camera.lookAt(0, 0, 0)
 
 
@@ -199,7 +207,7 @@ function main() {
         const delta = myGame.clock.getDelta()
 
         // console.log(bot.controls.keyboard)
-        bot.controls.movePlayer(delta)
+        bot.controls.update(delta)
         // меняем параметры куба - вращение
         if (myGame.scene.getObjectByName("Cube")) {
             const box = myGame.scene.getObjectByName("Cube")

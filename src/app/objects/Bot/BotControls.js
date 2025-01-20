@@ -7,6 +7,10 @@ class BotControls {
         // super(object, domElement);
         this.enabled = true
         this.object = object
+
+        // следовать за объектом
+        this.isFollowPlayer = true
+
         // ускорение
         this.accelerationDefault = 0.1
         this.acceleration = 0.1
@@ -20,12 +24,27 @@ class BotControls {
         this.maxSpeedBackward = this.maxSpeedForward * 0.2
 
         this.velocity = new THREE.Vector3(0, 0, 0); // вектор перемещения  (группы `car`)
-        this.direction = new THREE.Vector3(0, 0, 1); // вектор направления  ~
 
         this.angleOfRotation = this.object.rotation.y
         this.rotateSpeed = Math.PI / 180 * 90 / 60 // 90градусов в секунду - дополнительный коэффициент поворота 
 
-        this.keyboard = {}
+        this.keyboard = {} // пулл нажатых кнопок
+
+
+        // Настройка анимации и AnimationMixer
+        this.isAnimated = false
+        this.clips = {}
+        this.actions = {}
+        if (object.animations.length > 0) {
+            this.isAnimated = true
+            for (let i = 0; i < object.animations.length; i++) { // ["drift","fastDrive","SpinAround", "stop","walk", "Yes/No"])
+                this.clips[object.animations.name]
+                    = THREE.AnimationClip()
+                        .findByName(object.animations, object.animations.name)
+            }
+        }
+        // все анимационные действия
+        this.animationMixer = new THREE.AnimationMixer(this.object); // Анимационный микшер для робота
     }
 
 
@@ -51,7 +70,40 @@ class BotControls {
         this.keyboard[kEvent.code] = false
     }
 
-  
+    animationMove() {
+        // вперед и назад "walk"
+        if (this.keyboard["KeyW"] || this.keyboard["KeyS"]
+            || this.keyboard["KeyA"] || this.keyboard["KeyD"]) {
+            // анимация
+            this.actions["walk"] = this.animationMixer.clipAction(this.clips["walk"])
+            // action.timeScale = 0.2
+            if (this.actions["walk"].paused || !this.actions["walk"].isRunning())
+                this.actions["walk"].play().fadeIn(0.3)
+
+        } else {     // idel
+            if (this.actions["walk"]?.isRunning())
+                this.actions["walk"].stop()
+            if (this.actions["fastDrive"]?.isRunning())
+                this.actions["fastDrive"].stop()
+
+            // добавить цепочку анимаций на спокойное ожидание
+        }
+
+
+        // ускорение — "fastDrive"
+        if (this.keyboard["ShiftLeft"]) {
+            this.actions["fastDrive"] = this.animationMixer.clipAction(this.clips["fastDrive"])
+            // action.timeScale = 0.2
+
+            if (this.actions["fastDrive"].paused || !this.actions["fastDrive"].isRunning())
+                this.actions["fastDrive"].play().fadeIn(0.3)
+
+        } else {
+            if (this.actions["fastDrive"]?.isRunning())
+                this.actions["fastDrive"].stop()
+        }
+    }
+
     movePlayer(delta) {
         if (this.keyboard["KeyW"] && !this.keyboard["KeyS"]) {
             this.isAccelerating = true
@@ -93,7 +145,7 @@ class BotControls {
 
         // сильное ускорение (гипердрайв) 
         if (this.keyboard["ShiftLeft"]) {
-            this.acceleration = this.accelerationDefault * 10
+            this.acceleration = this.accelerationDefault * 1.5
         } else {
             this.acceleration = this.accelerationDefault
         }
@@ -101,17 +153,57 @@ class BotControls {
         // сильное торможение (ручник)
         if (this.keyboard["Space"]) {
             this.velocity.z = 0
-            this.decceleration = this.deccelerationDefault * 10
+            this.decceleration = this.deccelerationDefault * 1.5
         } else {
             this.decceleration = this.deccelerationDefault
         }
 
         this.object.translateZ(this.velocity.z * delta)
         this.object.rotation.y = this.angleOfRotation
-        // console.log(this.keyboard)
-        // console.log(this.velocity.z)
+
+        // this.animationMove()
+        // this.stop()
     }
 
+    // idelAnimation(animationNames = []) {
+    //     const orderClip = [];
+    //     if (!animationNames.length) {
+    //         animationNames.push(...["SpinAround", "stop", "SpinAround", "stop", "drift", "stop", "Yes/No", "stop"])
+    //     }
+
+    //     for (let i = 0; i < animationNames.length; i++) {
+    //         const clip = THREE.AnimationClip.findByName(this.clips, animationNames[i]);
+    //         if (clip) {
+    //             orderClip.push(clip);
+    //         } else {
+    //             console.warn(`Animation "${animationNames[i]}" not found.`);
+    //         }
+    //     }
+
+
+    //     return orderClip
+    // }
+
+    // playAnimationsSequentially(orderClip) {
+    //     if (this.currentAnimationIndex >= orderClip.length) {
+    //         this.currentAnimationIndex = 0; // Начинаем сначала
+    //     }
+    //     console.log("индекс анимации", this.currentAnimationIndex)
+    //     const clip = orderClip[this.currentAnimationIndex];
+    //     if (clip) {
+    //         const action = this.animationMixer.clipAction(clip);
+    //         // action.reset().play();
+    //         action.play()
+    //         action.onComplete = () => {
+    //             this.currentAnimationIndex++;
+    //             if (this.currentAnimationIndex < orderClip.length) {
+    //                 this.playAnimationsSequentially(orderClip);
+    //             }
+    //         };
+    //     } else {
+    //         console.warn('Animation not found.');
+    //     }
+    // }
     // move(value) {
     //     if (value === 1) {
 
@@ -171,18 +263,14 @@ class BotControls {
     // фнукция обновления данных
     update(delta) {
         this.movePlayer(delta)
-        // // console.log(this.object)
-        // var t = robot.position.addScaledVector(direction, delta)
-        // myGame.camera.lookAt(robot.position)
+        if (this.animationMixer) {
+            this.animationMixer.update(delta);
+        }
 
-
-        // if (this.isAccelerating) {
-        //     // Если нажата кнопка, остановка не производится
-        //     this.isAccelerating = false;
-        // } else {
-        //     // Постепенно останавливаем автомобиль, если кнопка не нажата
-        //     stop();
-        // }
+        if (this.isFollowPlayer && this.camera) {
+            this.camera.lookAt(this.object.position)
+            this.camera.position
+        }
     }
 
     // функция анимирования сцены
@@ -192,9 +280,26 @@ class BotControls {
     //     requestAnimationFrame(this.animate) // рекурсивный вызов для продолжения анимации
     // }
 
-    lookAt(camera, offsetView) {
-        if (camera.isCamera)
-            camera.lookAt(this.object.position)
+    // подписка на слежение за объектом, 
+    // в update производится пересчет положения, поворота и направления камеры
+    followPlayer(camera, offsetView) {
+        if (camera.isCamera) {
+            this.isFollowPlayer = true
+            this.camera = camera
+            this.cameraOffsetTarget = new THREE.Vector3(0, 0, -3) // на 3 клетки вперед
+            this.cameraOffsetPosition = new THREE.Vector3(0, 2.5, 5)
+            // camera.lookAt(this.object.position)
+        }
+    }
+    // полностью удаляю камеру из конроллера и прекращаю отслеживать объект
+    unfollowPlayer() {
+        this.camera = null
+        this.isFollowPlayer = false
+    }
+
+    // остановка только отслеживания объекта, камера остается в контроллере
+    stopFollowPlayer() {
+        this.isFollowPlayer = false
     }
 }
 export { BotControls }

@@ -2,100 +2,98 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 export class LowPolyTrees {
+
+
     constructor() {
-        new THREE.Mesh()
+        this._loader = new GLTFLoader().setPath("/")
+        this._PineTree = new THREE.Group();
+
+        this._LeafTree = new THREE.Group();
+
+        this._SnowyTree = new THREE.Group();
+
+        console.log("LowPolyTrees constructor", this)
+        console.log("this._SnowyTree.length", this._SnowyTree.length)
     }
 
-    getPineTree(name, positionXYZ = { x: 0, y: 0, z: 0 }) {
-        const loader = new GLTFLoader().setPath("/")
+    getPineTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
         const model = new THREE.Group()
-        model.name = "PineTree"
+        model.name = "_PineTree"
 
-        console.log(model.name, name)
-        loader.load("low_poly_trees_pine.glb", (glb) => {
-            // console.log(glb)
-            if (!name) {
-                console.log()
-                let item = this._getRandomArbitrary(1, 6)
+        if (!this._PineTree.children.length) {
+            this._loader.load("low_poly_trees_pine.glb", (glb) => {
+                this._PineTree.add(glb.scene.getObjectByName("Root").clone());
+                // console.log(this._PineTree);
+                this.addTreeToModel(name, model, positionXYZ);
+            });
+        } else {
+            this.addTreeToModel(name, model, positionXYZ);
+        }
 
-                console.log()
-                const tree = glb.scene.getObjectByName(`Tree_${item}`)
-
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
-
-            }
-            else {
-
-                let item = this._getRandomArbitrary(1, 6)
-
-                console.log(item)
-                const tree = glb.scene.getObjectByName(name)
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
-                console.log(tree)
-
-            }
-        })
-        return model
+        return model;
     }
-    getTree(name, positionXYZ = { x: 0, y: 0, z: 0 }) {
-        const loader = new GLTFLoader().setPath("/")
+    getTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
         const model = new THREE.Group()
-        model.name = "LeafTree"
+        model.name = "_LeafTree"
 
-        console.log(model.name, name)
-        loader.load("low_poly_trees.glb", (glb) => {
-            // console.log(glb)
-            if (!name) {
-                let item = this._getRandomArbitrary(1, 6)
-                const tree = glb.scene.getObjectByName(`Tree_${item}`)
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
+        if (!this._LeafTree.children.length) {
+            this._loader.load("low_poly_trees.glb", (glb) => {
+                this._LeafTree.add(glb.scene.getObjectByName("Root").clone());
+                // console.log(this._LeafTree);
+                this.addTreeToModel(name, model, positionXYZ);
+            });
+        } else {
+            this.addTreeToModel(name, model, positionXYZ);
+        }
 
-            }
-            else {
-                const tree = glb.scene.getObjectByName(name)
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
+        return model;
 
-            }
-        })
-        return model
     }
-    getSnowyTree(name, positionXYZ = { x: 0, y: 0, z: 0 }) {
-        const loader = new GLTFLoader().setPath("/")
-        const model = new THREE.Group()
-        model.name = "SnowyTree"
+    getSnowyTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
+        const model = new THREE.Group();
+        model.name = "_SnowyTree";
 
-        console.log(model.name, name)
-        loader.load("low_poly_trees_snowy.glb", (glb) => {
-            // console.log(glb)
-            if (!name) {
-                let item = this._getRandomArbitrary(1, 6)
-                const tree = glb.scene.getObjectByName(`Tree_${item}`)
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
-            }
-            else {
-                const tree = glb.scene.getObjectByName(name)
-                tree.position.set(positionXYZ.x, positionXYZ.y, positionXYZ.z)
-                tree.rotation.x = -Math.PI / 2
-                tree.scale.set(1, 1, 1)
-                model.add(tree)
-            }
-        })
-        return model
+        if (!this._SnowyTree.children.length) {
+            this._loader.load("low_poly_trees_snowy.glb", (glb) => {
+                this._SnowyTree.add(glb.scene.getObjectByName("Root").clone());
+                // console.log(this._SnowyTree);
+                this.addTreeToModel(name, model, positionXYZ);
+            });
+        } else {
+            this.addTreeToModel(name, model, positionXYZ);
+        }
+
+        return model;
+    }
+
+    addTreeToModel(name, model, positionXYZ) {
+        if (!this[model.name]) {
+            console.warn("Model not loaded yet.");
+            return;
+        }
+
+        let tree;
+        if (!name) {
+            const item = this._getRandomArbitrary(1, 6);
+            tree = this[model.name].getObjectByName(`Tree_${item}`);
+        } else {
+            tree = this[model.name].getObjectByName(name);
+        }
+
+        if (tree) {
+            const clonedTree = tree.clone(); // Клонируем дерево, чтобы избежать дублирования ссылок
+            model.add(clonedTree);
+            this.toDefault(clonedTree);
+            this._setHeight(clonedTree, this._getRandomArbitrary(5, 25))
+            model.position.copy(positionXYZ); // Используем copy для установки позиции
+        } else {
+            console.warn(`Tree ${name ? name : `Tree_${item}`} not found.`);
+        }
+    }
+    toDefault(tree) {
+        tree.position.set(0, 0, 0)
+        tree.rotation.x = -Math.PI / 2
+        tree.scale.set(1, 1, 1)
     }
     loadModel() {
 

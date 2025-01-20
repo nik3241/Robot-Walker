@@ -6,6 +6,7 @@ import { GameScene } from "./objects/GameScene"
 import { GameCamera } from "./objects/GameCamera"
 import { GameRenderer } from "./objects/GameRenderer"
 import { GameHelpers } from "./objects/GameHelpers"
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import keyList from "./utils/keyList";
 
 const shortKeyList = [
@@ -45,6 +46,7 @@ export class Game {
         new FirstPersonControls(this.camera, this.canvas),
     ]
 
+
     // высота и ширина изображения рендера
     renderViewPort = new Vector2(0, 0)
 
@@ -81,12 +83,13 @@ export class Game {
 
             this.displayKeyHelper()
             this.displayViewportHelper()
+            this.gui = new GUI({ container: this.domElement.querySelector(".gui") })
         }
 
         // настраиваем контролер от первого лица
         this.controls[0].movementSpeed = 2;
         this.controls[0].lookSpeed = 0.2;
-        this.controls[0].activeLook = false
+        this.controls[0].activeLook = !true
 
         // добавление на сцену хелперов и объектов 
         this.scene.name = "my games scene"

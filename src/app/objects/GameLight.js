@@ -31,8 +31,8 @@ export class GameLight extends THREE.Group {
         const directionLight = new THREE.DirectionalLight(0xffffff, 0.5)
         pointLight.name = pointLight.type
 
-        directionLight.position.set(0, 1, 0)
-        directionLight.target.position.set(-0.8, -1, -0.5)
+        directionLight.position.set(0, 1, 0).multiplyScalar(100)
+        directionLight.target.position.set(-0.8, -1, -0.5).multiplyScalar(100)
         // 90deg-15deg
         // directionLight.rotation.z = Math.PI * (1 / 2 - 1 / 6)
         directionLight.castShadow = this.flagCastShadow

@@ -10,11 +10,10 @@ export class BotModel {
     materials = []
     animations = []
     object = new THREE.Group()
-    controls = null
+    controls = new BotControls(this.object)
 
-    constructor(myGame) {
+    constructor() {
         this.loadModel()
-        this.addControls()
         return this
     }
     loadModel() {
@@ -23,8 +22,9 @@ export class BotModel {
         loader.load("little_robot_5.glb", (glb) => {
             console.log(glb)
             // выгружаем анимации
-            this.animations.push(...glb.animations)
-            console.log("анимации", this.animations)
+            // this.animations.push(...glb.animations)
+            this.object.animations.push(...glb.animations)
+            console.log("анимации", this.object)
 
             this.object.add(glb.scene) // группа с самим роботом
 
@@ -48,15 +48,13 @@ export class BotModel {
                     object.receiveShadow = true
                 }
             })
+
+
+            this.controls.connect()
         })
 
-        this.addControls()
     }
 
 
-    addControls() {
-        this.controls = new BotControls(this.object)
-        this.controls.connect()
-        // this.controls.animate()
-    }
+
 }
