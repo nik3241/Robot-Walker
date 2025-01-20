@@ -268,8 +268,11 @@ class BotControls {
         }
 
         if (this.isFollowPlayer && this.camera) {
-            this.camera.lookAt(this.object.position)
-            this.camera.position
+            const target = this.object.position.clone().add(this.cameraOffsetTarget)
+            const position = this.object.position.clone().add(this.cameraOffsetPosition)
+            this.camera.rotation.copy(this.object.rotation)
+            this.camera.position.copy(position)
+            this.camera.lookAt(target)
         }
     }
 
@@ -286,7 +289,7 @@ class BotControls {
         if (camera.isCamera) {
             this.isFollowPlayer = true
             this.camera = camera
-            this.cameraOffsetTarget = new THREE.Vector3(0, 0, -3) // на 3 клетки вперед
+            this.cameraOffsetTarget = new THREE.Vector3(0, 2, 0) // немного над объектом
             this.cameraOffsetPosition = new THREE.Vector3(0, 2.5, 5)
             // camera.lookAt(this.object.position)
         }
