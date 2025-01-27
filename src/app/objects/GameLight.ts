@@ -3,10 +3,10 @@ import * as THREE from 'three';
 
 
 export class GameLight extends THREE.Group {
+    flagCastShadow = true
 
     constructor() {
         super()
-        this.flagCastShadow = true
         // добавляю несколько объектов освещения
         // общий свет, и два точечных источника
 
@@ -32,11 +32,9 @@ export class GameLight extends THREE.Group {
         pointLight.name = pointLight.type
 
         directionLight.position.set(0, 1, 0).multiplyScalar(100)
-        directionLight.target.position.set(-0.8, -1, -0.5).multiplyScalar(100)
-        // 90deg-15deg
-        // directionLight.rotation.z = Math.PI * (1 / 2 - 1 / 6)
+        directionLight.target.position.set(-0.8, 0, -0.5).multiplyScalar(100)
         directionLight.castShadow = this.flagCastShadow
-
+        directionLight.name = directionLight.type
 
 
         this.add(light)

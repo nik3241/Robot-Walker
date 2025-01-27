@@ -1,323 +1,423 @@
-"use strict"
-import { Vector2, Vector3 } from "three"
+import * as THREE from 'three'
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
+import * as CANNON from 'cannon-es'
+import CannonDebugRenderer from '/utils/cannonDebugRenderer.js'
 
-export class Noise {
-    constructor(seed = 0) {
-        this.seed = seed ? seed : Math.random() * 1000
+const scene = new THREE.Scene()
 
-        this.x = x; this.y = y; this.z = z;
-        this.p = [151, 160, 137, 91, 90, 15,
-            131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
-            190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
-            88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166,
-            77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244,
-            102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196,
-            135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123,
-            5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
-            223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9,
-            129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228,
-            251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107,
-            49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254,
-            138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180];
+{
+    const light1 = new THREE.SpotLight(0xffffff, 100)
+    light1.position.set(2.5, 5, 2.5)
+    light1.angle = Math.PI / 8
+    light1.penumbra = 0.5
+    light1.castShadow = true
+    light1.shadow.mapSize.width = 1024
+    light1.shadow.mapSize.height = 1024
+    light1.shadow.camera.near = 0.5
+    light1.shadow.camera.far = 20
+    scene.add(light1)
 
-        this.grad3 = [new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0),
-        new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1),
-        new Grad(0, 1, 1), new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1)];
+    const light2 = new THREE.SpotLight(0xffffff, 100)
+    light2.position.set(-2.5, 5, 2.5)
+    light2.angle = Math.PI / 8
+    light2.penumbra = 0.5
+    light2.castShadow = true
+    light2.shadow.mapSize.width = 1024
+    light2.shadow.mapSize.height = 1024
+    light2.shadow.camera.near = 0.5
+    light2.shadow.camera.far = 20
+    scene.add(light2)
+}
 
-        this.perm = new Array(512);
-        this.gradP = new Array(512);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100)
+camera.position.set(0, 0, 2)
 
-        this.seed(seed || 0);
+const pivot = new THREE.Object3D()
+pivot.position.set(0, 1, 10)
+
+const yaw = new THREE.Object3D()
+const pitch = new THREE.Object3D()
+
+scene.add(pivot)
+pivot.add(yaw)
+yaw.add(pitch)
+pitch.add(camera)
+
+const renderer = new THREE.WebGLRenderer()
+renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.shadowMap.enabled = true
+document.body.appendChild(renderer.domElement)
+
+const world = new CANNON.World()
+world.gravity.set(0, -9.82, 0)
+
+const groundMaterial = new CANNON.Material('groundMaterial')
+const slipperyMaterial = new CANNON.Material('slipperyMaterial')
+const slippery_ground_cm = new CANNON.ContactMaterial(groundMaterial, slipperyMaterial, {
+    friction: 0,
+    restitution: 0.3,
+    contactEquationStiffness: 1e8,
+    contactEquationRelaxation: 3,
+})
+world.addContactMaterial(slippery_ground_cm)
+
+// Character Collider
+const characterCollider = new THREE.Object3D()
+characterCollider.position.y = 3
+scene.add(characterCollider)
+const colliderShape = new CANNON.Sphere(0.5)
+const colliderBody = new CANNON.Body({ mass: 1, material: slipperyMaterial })
+colliderBody.addShape(colliderShape, new CANNON.Vec3(0, 0.5, 0))
+colliderBody.addShape(colliderShape, new CANNON.Vec3(0, -0.5, 0))
+colliderBody.position.set(characterCollider.position.x, characterCollider.position.y, characterCollider.position.z)
+colliderBody.linearDamping = 0.95
+colliderBody.angularFactor.set(0, 1, 0) // prevents rotation X,Z axis
+world.addBody(colliderBody)
+
+let mixer
+let modelReady = false
+let modelMesh
+const animationActions = []
+let activeAction
+let lastAction
+
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('jsm/libs/draco/') // loading from own webserver
+
+const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(dracoLoader)
+
+gltfLoader.load(
+    '/models/eve$@walk_compressed.glb',
+    (gltf) => {
+        gltf.scene.traverse(function (child) {
+            if (child.isMesh) {
+                let m = child
+                m.receiveShadow = true
+                m.castShadow = true
+                m.frustumCulled = false
+                m.geometry.computeVertexNormals()
+                if (child.material) {
+                    const mat = child.material
+                    mat.transparent = false
+                    mat.side = THREE.FrontSide
+                }
+            }
+        })
+        mixer = new THREE.AnimationMixer(gltf.scene)
+        let animationAction = mixer.clipAction(gltf.animations[0])
+        animationActions.push(animationAction)
+        activeAction = animationActions[0]
+        scene.add(gltf.scene)
+        modelMesh = gltf.scene
+        light1.target = modelMesh
+        light2.target = modelMesh
+
+        //add an animation from another file
+        gltfLoader.load(
+            '/models/eve@walking.glb',
+            (gltf) => {
+                console.log('loaded Eve walking')
+                let animationAction = mixer.clipAction(gltf.animations[0])
+                animationActions.push(animationAction)
+
+                gltfLoader.load(
+                    '/models/eve@jump.glb',
+                    (gltf) => {
+                        console.log('loaded Eve jump')
+                        gltf.animations[0].tracks.shift() //delete the specific track that moves the object up/down while jumping
+                        let animationAction = mixer.clipAction(gltf.animations[0])
+                        animationActions.push(animationAction)
+                        //progressBar.style.display = 'none'
+                        modelReady = true
+
+                        setAction(animationActions[1], true)
+                    },
+                    (xhr) => {
+                        if (xhr.lengthComputable) {
+                            //const percentComplete = (xhr.loaded / xhr.total) * 100
+                            //progressBar.value = percentComplete
+                            //progressBar.style.display = 'block'
+                        }
+                    },
+                    (error) => {
+                        console.log(error)
+                    }
+                )
+            },
+            (xhr) => {
+                if (xhr.lengthComputable) {
+                    //const percentComplete = (xhr.loaded / xhr.total) * 100
+                    //progressBar.value = percentComplete
+                    //progressBar.style.display = 'block'
+                }
+            },
+            (error) => {
+                console.log(error)
+            }
+        )
+    },
+    (xhr) => {
+        if (xhr.lengthComputable) {
+            //const percentComplete = (xhr.loaded / xhr.total) * 100
+            //progressBar.value = percentComplete
+            //progressBar.style.display = 'block'
+        }
+    },
+    (error) => {
+        console.log(error)
     }
+)
 
+const setAction = (toAction, loop) => {
+    if (toAction != activeAction) {
+        lastAction = activeAction
+        activeAction = toAction
+        lastAction.fadeOut(0.1)
+        activeAction.reset()
+        activeAction.fadeIn(0.1)
+        activeAction.play()
+        if (!loop) {
+            activeAction.clampWhenFinished = true
+            activeAction.loop = THREE.LoopOnce
+        }
+    }
+}
 
-    seed(seed) {
-        if (seed > 0 && seed < 1) {
-            // Scale the seed out
-            seed *= 65536;
+let moveForward = false
+let moveBackward = false
+let moveLeft = false
+let moveRight = false
+let canJump = true
+const contactNormal = new CANNON.Vec3()
+const upAxis = new CANNON.Vec3(0, 1, 0)
+colliderBody.addEventListener('collide', function (e) {
+    const contact = e.contact
+    if (contact.bi.id == colliderBody.id) {
+        contact.ni.negate(contactNormal)
+    } else {
+        contactNormal.copy(contact.ni)
+    }
+    if (contactNormal.dot(upAxis) > 0.5) {
+        if (!canJump) {
+            setAction(animationActions[1], true)
+        }
+        canJump = true
+    }
+})
+
+const planeGeometry = new THREE.PlaneGeometry(100, 100)
+const texture = new THREE.TextureLoader().load('/img/grid.png')
+const plane = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
+plane.rotateX(-Math.PI / 2)
+plane.receiveShadow = true
+scene.add(plane)
+
+const planeShape = new CANNON.Plane()
+const planeBody = new CANNON.Body({ mass: 0, material: groundMaterial })
+planeBody.addShape(planeShape)
+planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+world.addBody(planeBody)
+
+const boxes = []
+const boxMeshes = []
+for (let i = 0; i < 25; i++) {
+    const halfExtents = new CANNON.Vec3(Math.random() * 2, Math.random() * 2, Math.random() * 2)
+    const boxShape = new CANNON.Box(halfExtents)
+    const boxGeometry = new THREE.BoxGeometry(halfExtents.x * 2, halfExtents.y * 2, halfExtents.z * 2)
+    const x = (Math.random() - 0.5) * 20
+    const y = 2 + i * 2
+    const z = (Math.random() - 0.5) * 20
+    const boxBody = new CANNON.Body({ mass: 1, material: groundMaterial })
+    boxBody.addShape(boxShape)
+    const boxMesh = new THREE.Mesh(boxGeometry, new THREE.MeshStandardMaterial())
+    world.addBody(boxBody)
+    scene.add(boxMesh)
+    boxBody.position.set(x, y, z)
+    boxMesh.castShadow = true
+    boxMesh.receiveShadow = true
+    boxes.push(boxBody)
+    boxMeshes.push(boxMesh)
+}
+
+window.addEventListener('resize', onWindowResize, false)
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    render()
+}
+
+function onDocumentMouseMove(e) {
+    e.preventDefault()
+    yaw.rotation.y -= e.movementX * 0.002
+    const v = pitch.rotation.x - e.movementY * 0.002
+    if (v > -1 && v < 0.1) {
+        pitch.rotation.x = v
+    }
+}
+
+function onDocumentMouseWheel(e) {
+    e.preventDefault()
+    const v = camera.position.z + e.deltaY * 0.005
+    if (v >= 0.5 && v <= 5) {
+        camera.position.z = v
+    }
+}
+
+const menuPanel = document.getElementById('menuPanel')
+const startButton = document.getElementById('startButton')
+startButton.addEventListener(
+    'click',
+    () => {
+        renderer.domElement.requestPointerLock()
+    },
+    false
+)
+
+let pointerLocked = false
+document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === renderer.domElement) {
+        pointerLocked = true
+
+        startButton.style.display = 'none'
+        menuPanel.style.display = 'none'
+
+        document.addEventListener('keydown', onDocumentKey, false)
+        document.addEventListener('keyup', onDocumentKey, false)
+
+        renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false)
+        renderer.domElement.addEventListener('wheel', onDocumentMouseWheel, false)
+    } else {
+        menuPanel.style.display = 'block'
+
+        document.removeEventListener('keydown', onDocumentKey, false)
+        document.removeEventListener('keyup', onDocumentKey, false)
+
+        renderer.domElement.removeEventListener('mousemove', onDocumentMouseMove, false)
+        renderer.domElement.removeEventListener('wheel', onDocumentMouseWheel, false)
+
+        setTimeout(() => {
+            startButton.style.display = 'block'
+        }, 1000)
+    }
+})
+
+const keyMap = {}
+const onDocumentKey = (e) => {
+    keyMap[e.code] = e.type === 'keydown'
+
+    if (pointerLocked) {
+        moveForward = keyMap['KeyW']
+        moveBackward = keyMap['KeyS']
+        moveLeft = keyMap['KeyA']
+        moveRight = keyMap['KeyD']
+
+        if (keyMap['Space']) {
+            if (canJump === true) {
+                colliderBody.velocity.y = 10
+                setAction(animationActions[2], false)
+            }
+            canJump = false
+        }
+    }
+}
+
+const inputVelocity = new THREE.Vector3()
+const velocity = new CANNON.Vec3()
+const euler = new THREE.Euler()
+const quat = new THREE.Quaternion()
+const v = new THREE.Vector3()
+const targetQuaternion = new THREE.Quaternion()
+let distance = 0
+
+const stats = new Stats()
+document.body.appendChild(stats.dom)
+
+const clock = new THREE.Clock()
+let delta = 0
+
+const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
+
+function animate() {
+    requestAnimationFrame(animate)
+
+    if (modelReady) {
+        if (canJump) {
+            //walking
+            mixer.update(distance / 10)
+        } else {
+            //were in the air
+            mixer.update(delta)
+        }
+        const p = characterCollider.position
+        p.y -= 1
+        modelMesh.position.y = characterCollider.position.y
+        distance = modelMesh.position.distanceTo(p)
+
+        const rotationMatrix = new THREE.Matrix4()
+        rotationMatrix.lookAt(p, modelMesh.position, modelMesh.up)
+        targetQuaternion.setFromRotationMatrix(rotationMatrix)
+
+        if (!modelMesh.quaternion.equals(targetQuaternion)) {
+            modelMesh.quaternion.rotateTowards(targetQuaternion, delta * 10)
         }
 
-        seed = Math.floor(seed);
-        if (seed < 256) {
-            seed |= seed << 8;
-        }
+        if (canJump) {
+            inputVelocity.set(0, 0, 0)
 
-        var p = this.p;
-        for (var i = 0; i < 256; i++) {
-            var v;
-            if (i & 1) {
-                v = p[i] ^ (seed & 255);
-            } else {
-                v = p[i] ^ ((seed >> 8) & 255);
+            if (moveForward) {
+                inputVelocity.z = -1
+            }
+            if (moveBackward) {
+                inputVelocity.z = 1
             }
 
-            var perm = this.perm;
-            var gradP = this.gradP;
-            perm[i] = perm[i + 256] = v;
-            gradP[i] = gradP[i + 256] = this.grad3[v % 12];
+            if (moveLeft) {
+                inputVelocity.x = -1
+            }
+            if (moveRight) {
+                inputVelocity.x = 1
+            }
+
+            inputVelocity.setLength(delta * 10)
+
+            // apply camera rotation to inputVelocity
+            euler.y = yaw.rotation.y
+            euler.order = 'XYZ'
+            quat.setFromEuler(euler)
+            inputVelocity.applyQuaternion(quat)
         }
+
+        modelMesh.position.lerp(characterCollider.position, 0.1)
     }
+    velocity.set(inputVelocity.x, inputVelocity.y, inputVelocity.z)
+    colliderBody.applyImpulse(velocity)
 
-    // 2D simplex noise
-    simplex2(xin, yin) {
-        var n0, n1, n2; // Noise contributions from the three corners
+    delta = Math.min(clock.getDelta(), 0.1)
+    world.step(delta)
 
-        // Skewing and unskewing factors for 2, 3, and 4 dimensions
-        var F2 = 0.5 * (Math.sqrt(3) - 1);
-        var G2 = (3 - Math.sqrt(3)) / 6;
+    //cannonDebugRenderer.update()
 
-        // Skew the input space to determine which simplex cell we're in
-        var s = (xin + yin) * F2; // Hairy factor for 2D
-        var i = Math.floor(xin + s);
-        var j = Math.floor(yin + s);
-        var t = (i + j) * G2;
-        var x0 = xin - i + t; // The x,y distances from the cell origin, unskewed.
-        var y0 = yin - j + t;
-        // For the 2D case, the simplex shape is an equilateral triangle.
-        // Determine which simplex we are in.
-        var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
-        if (x0 > y0) { // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-            i1 = 1; j1 = 0;
-        } else {    // upper triangle, YX order: (0,0)->(0,1)->(1,1)
-            i1 = 0; j1 = 1;
-        }
-        // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
-        // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
-        // c = (3-sqrt(3))/6
+    characterCollider.position.set(colliderBody.position.x, colliderBody.position.y, colliderBody.position.z)
+    boxes.forEach((b, i) => {
+        boxMeshes[i].position.set(b.position.x, b.position.y, b.position.z)
+        boxMeshes[i].quaternion.set(b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w)
+    })
 
-        var x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords
-        var y1 = y0 - j1 + G2;
-        var x2 = x0 - 1 + 2 * G2; // Offsets for last corner in (x,y) unskewed coords
-        var y2 = y0 - 1 + 2 * G2;
-        // Work out the hashed gradient indices of the three simplex corners
-        i &= 255;
-        j &= 255;
+    characterCollider.getWorldPosition(v)
+    pivot.position.lerp(v, 0.1)
 
-        var perm = this.perm;
-        var gradP = this.gradP;
-        var gi0 = gradP[i + perm[j]];
-        var gi1 = gradP[i + i1 + perm[j + j1]];
-        var gi2 = gradP[i + 1 + perm[j + 1]];
-        // Calculate the contribution from the three corners
-        var t0 = 0.5 - x0 * x0 - y0 * y0;
-        if (t0 < 0) {
-            n0 = 0;
-        } else {
-            t0 *= t0;
-            n0 = t0 * t0 * gi0.dot2(x0, y0);  // (x,y) of grad3 used for 2D gradient
-        }
-        var t1 = 0.5 - x1 * x1 - y1 * y1;
-        if (t1 < 0) {
-            n1 = 0;
-        } else {
-            t1 *= t1;
-            n1 = t1 * t1 * gi1.dot2(x1, y1);
-        }
-        var t2 = 0.5 - x2 * x2 - y2 * y2;
-        if (t2 < 0) {
-            n2 = 0;
-        } else {
-            t2 *= t2;
-            n2 = t2 * t2 * gi2.dot2(x2, y2);
-        }
-        // Add contributions from each corner to get the final noise value.
-        // The result is scaled to return values in the interval [-1,1].
-        return 70 * (n0 + n1 + n2);
-    };
+    render()
 
-    // 3D simplex noise
-    simplex3(xin, yin, zin) {
-        var n0, n1, n2, n3; // Noise contributions from the four corners
-
-        // Skewing and unskewing factors for 2, 3, and 4 dimensions
-        var F3 = 1 / 3;
-        var G3 = 1 / 6;
-
-        // Skew the input space to determine which simplex cell we're in
-        var s = (xin + yin + zin) * F3; // Hairy factor for 2D
-        var i = Math.floor(xin + s);
-        var j = Math.floor(yin + s);
-        var k = Math.floor(zin + s);
-
-        var t = (i + j + k) * G3;
-        var x0 = xin - i + t; // The x,y distances from the cell origin, unskewed.
-        var y0 = yin - j + t;
-        var z0 = zin - k + t;
-
-        // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
-        // Determine which simplex we are in.
-        var i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
-        var i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
-        if (x0 >= y0) {
-            if (y0 >= z0) { i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0; }
-            else if (x0 >= z0) { i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 0; k2 = 1; }
-            else { i1 = 0; j1 = 0; k1 = 1; i2 = 1; j2 = 0; k2 = 1; }
-        } else {
-            if (y0 < z0) { i1 = 0; j1 = 0; k1 = 1; i2 = 0; j2 = 1; k2 = 1; }
-            else if (x0 < z0) { i1 = 0; j1 = 1; k1 = 0; i2 = 0; j2 = 1; k2 = 1; }
-            else { i1 = 0; j1 = 1; k1 = 0; i2 = 1; j2 = 1; k2 = 0; }
-        }
-        // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
-        // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
-        // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
-        // c = 1/6.
-        var x1 = x0 - i1 + G3; // Offsets for second corner
-        var y1 = y0 - j1 + G3;
-        var z1 = z0 - k1 + G3;
-
-        var x2 = x0 - i2 + 2 * G3; // Offsets for third corner
-        var y2 = y0 - j2 + 2 * G3;
-        var z2 = z0 - k2 + 2 * G3;
-
-        var x3 = x0 - 1 + 3 * G3; // Offsets for fourth corner
-        var y3 = y0 - 1 + 3 * G3;
-        var z3 = z0 - 1 + 3 * G3;
-
-        // Work out the hashed gradient indices of the four simplex corners
-        i &= 255;
-        j &= 255;
-        k &= 255;
-
-        var perm = this.perm;
-        var gradP = this.gradP;
-        var gi0 = gradP[i + perm[j + perm[k]]];
-        var gi1 = gradP[i + i1 + perm[j + j1 + perm[k + k1]]];
-        var gi2 = gradP[i + i2 + perm[j + j2 + perm[k + k2]]];
-        var gi3 = gradP[i + 1 + perm[j + 1 + perm[k + 1]]];
-
-        // Calculate the contribution from the four corners
-        var t0 = 0.5 - x0 * x0 - y0 * y0 - z0 * z0;
-        if (t0 < 0) {
-            n0 = 0;
-        } else {
-            t0 *= t0;
-            n0 = t0 * t0 * gi0.dot3(x0, y0, z0);  // (x,y) of grad3 used for 2D gradient
-        }
-        var t1 = 0.5 - x1 * x1 - y1 * y1 - z1 * z1;
-        if (t1 < 0) {
-            n1 = 0;
-        } else {
-            t1 *= t1;
-            n1 = t1 * t1 * gi1.dot3(x1, y1, z1);
-        }
-        var t2 = 0.5 - x2 * x2 - y2 * y2 - z2 * z2;
-        if (t2 < 0) {
-            n2 = 0;
-        } else {
-            t2 *= t2;
-            n2 = t2 * t2 * gi2.dot3(x2, y2, z2);
-        }
-        var t3 = 0.5 - x3 * x3 - y3 * y3 - z3 * z3;
-        if (t3 < 0) {
-            n3 = 0;
-        } else {
-            t3 *= t3;
-            n3 = t3 * t3 * gi3.dot3(x3, y3, z3);
-        }
-        // Add contributions from each corner to get the final noise value.
-        // The result is scaled to return values in the interval [-1,1].
-        return 32 * (n0 + n1 + n2 + n3);
-
-    };
-
-    // 2D Perlin Noise
-    perlin2(x, y) {
-        // Find unit grid cell containing point
-        var X = Math.floor(x), Y = Math.floor(y);
-        // Get relative xy coordinates of point within that cell
-        x = x - X; y = y - Y;
-        // Wrap the integer cells at 255 (smaller integer period can be introduced here)
-        X = X & 255; Y = Y & 255;
-
-        // Calculate noise contributions from each of the four corners
-        var perm = this.perm;
-        var gradP = this.gradP;
-        var n00 = gradP[X + perm[Y]].dot2(x, y);
-        var n01 = gradP[X + perm[Y + 1]].dot2(x, y - 1);
-        var n10 = gradP[X + 1 + perm[Y]].dot2(x - 1, y);
-        var n11 = gradP[X + 1 + perm[Y + 1]].dot2(x - 1, y - 1);
-
-        // Compute the fade curve value for x
-        var u = fade(x);
-
-        // Interpolate the four results
-        return lerp(
-            lerp(n00, n10, u),
-            lerp(n01, n11, u),
-            fade(y));
-    };
-
-    // 3D Perlin Noise
-    perlin3(x, y, z) {
-        // Find unit grid cell containing point
-        var X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z);
-        // Get relative xyz coordinates of point within that cell
-        x = x - X; y = y - Y; z = z - Z;
-        // Wrap the integer cells at 255 (smaller integer period can be introduced here)
-        X = X & 255; Y = Y & 255; Z = Z & 255;
-
-        // Calculate noise contributions from each of the eight corners
-        var perm = this.perm;
-        var gradP = this.gradP;
-        var n000 = gradP[X + perm[Y + perm[Z]]].dot3(x, y, z);
-        var n001 = gradP[X + perm[Y + perm[Z + 1]]].dot3(x, y, z - 1);
-        var n010 = gradP[X + perm[Y + 1 + perm[Z]]].dot3(x, y - 1, z);
-        var n011 = gradP[X + perm[Y + 1 + perm[Z + 1]]].dot3(x, y - 1, z - 1);
-        var n100 = gradP[X + 1 + perm[Y + perm[Z]]].dot3(x - 1, y, z);
-        var n101 = gradP[X + 1 + perm[Y + perm[Z + 1]]].dot3(x - 1, y, z - 1);
-        var n110 = gradP[X + 1 + perm[Y + 1 + perm[Z]]].dot3(x - 1, y - 1, z);
-        var n111 = gradP[X + 1 + perm[Y + 1 + perm[Z + 1]]].dot3(x - 1, y - 1, z - 1);
-
-        // Compute the fade curve value for x, y, z
-        var u = fade(x);
-        var v = fade(y);
-        var w = fade(z);
-
-        // Interpolate
-        return lerp(
-            lerp(
-                lerp(n000, n100, u),
-                lerp(n001, n101, u), w),
-            lerp(
-                lerp(n010, n110, u),
-                lerp(n011, n111, u), w),
-            v);
-    };
-
-
-    // ##### Perlin noise stuff
-    fade(t) {
-        return t * t * t * (t * (t * 6 - 15) + 10);
-    }
-    lerp(a, b, t) {
-        return (1 - t) * a + t * b;
-    }
-
+    stats.update()
 }
 
-class Grad {
-    constructor(x, y, z) {
-        this.x = x
-        this.y = y
-        this.z = z
-    }
-
-
-    dot2(x, y) {
-        return this.x * x + this.y * y;
-    }
-    dot3(x, y, z) {
-        return this.x * x + this.y * y + this.z * z;
-    }
+function render() {
+    renderer.render(scene, camera)
 }
 
-
-// Skewing and unskewing factors for 2, 3, and 4 dimensions
-
-
-
-
-
-
-
-
+animate()

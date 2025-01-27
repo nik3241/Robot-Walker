@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+
+type PolyTrees = { [key: string]: THREE.Group<THREE.Object3DEventMap> }
 export class LowPolyTrees {
+    private _loader: GLTFLoader;
+    private ['_PineTree']: THREE.Group<THREE.Object3DEventMap>;
+    private ['_LeafTree']: THREE.Group<THREE.Object3DEventMap>;
+    private ['_SnowyTree']: THREE.Group<THREE.Object3DEventMap>;
 
 
     constructor() {
@@ -11,18 +17,15 @@ export class LowPolyTrees {
         this._LeafTree = new THREE.Group();
 
         this._SnowyTree = new THREE.Group();
-
-        console.log("LowPolyTrees constructor", this)
-        console.log("this._SnowyTree.length", this._SnowyTree.length)
     }
 
-    getPineTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
+    getPineTree(name: string, positionXYZ = new THREE.Vector3(0, 0, 0)) {
         const model = new THREE.Group()
         model.name = "_PineTree"
 
         if (!this._PineTree.children.length) {
             this._loader.load("low_poly_trees_pine.glb", (glb) => {
-                this._PineTree.add(glb.scene.getObjectByName("Root").clone());
+                this._PineTree.add(glb.scene.getObjectByName("Root")!.clone());
                 // console.log(this._PineTree);
                 this.addTreeToModel(name, model, positionXYZ);
             });
@@ -32,13 +35,13 @@ export class LowPolyTrees {
 
         return model;
     }
-    getTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
+    getTree(name: string, positionXYZ = new THREE.Vector3(0, 0, 0)) {
         const model = new THREE.Group()
         model.name = "_LeafTree"
 
         if (!this._LeafTree.children.length) {
             this._loader.load("low_poly_trees.glb", (glb) => {
-                this._LeafTree.add(glb.scene.getObjectByName("Root").clone());
+                this._LeafTree.add(glb.scene.getObjectByName("Root")!.clone());
                 // console.log(this._LeafTree);
                 this.addTreeToModel(name, model, positionXYZ);
             });
@@ -49,13 +52,13 @@ export class LowPolyTrees {
         return model;
 
     }
-    getSnowyTree(name, positionXYZ = new THREE.Vector3(0, 0, 0)) {
+    getSnowyTree(name: string, positionXYZ = new THREE.Vector3(0, 0, 0)) {
         const model = new THREE.Group();
         model.name = "_SnowyTree";
 
         if (!this._SnowyTree.children.length) {
             this._loader.load("low_poly_trees_snowy.glb", (glb) => {
-                this._SnowyTree.add(glb.scene.getObjectByName("Root").clone());
+                this._SnowyTree.add(glb.scene.getObjectByName("Root")!.clone());
                 // console.log(this._SnowyTree);
                 this.addTreeToModel(name, model, positionXYZ);
             });
@@ -65,19 +68,35 @@ export class LowPolyTrees {
 
         return model;
     }
+    private getTreeGroup(name: string): THREE.Group | null {
+        switch (name) {
+            case "_PineTree":
+                return this._PineTree;
+            case "_LeafTree":
+                return this._LeafTree;
+            case "_SnowyTree":
+                return this._SnowyTree;
+            default:
+                return null;
+        }
+    }
+    addTreeToModel(name: string, model: THREE.Object3D, positionXYZ: THREE.Vector3) {
+        // if (!this[model.name]) {
+        //     console.warn("Model not loaded yet.");
+        //     return;
+        // }
 
-    addTreeToModel(name, model, positionXYZ) {
-        if (!this[model.name]) {
-            console.warn("Model not loaded yet.");
+        let tree: THREE.Object3D | null = null;
+        const treeGroup = this.getTreeGroup(model.name);
+        if (!treeGroup) {
+            console.warn(`Tree group ${model.name} not found.`);
             return;
         }
-
-        let tree;
         if (!name) {
             const item = this._getRandomArbitrary(1, 6);
-            tree = this[model.name].getObjectByName(`Tree_${item}`);
+            tree = treeGroup.getObjectByName(`Tree_${item}`)!;
         } else {
-            tree = this[model.name].getObjectByName(name);
+            tree = treeGroup.getObjectByName(name)!;
         }
 
         if (tree) {
@@ -87,22 +106,20 @@ export class LowPolyTrees {
             this._setHeight(clonedTree, this._getRandomArbitrary(5, 25))
             model.position.copy(positionXYZ); // Используем copy для установки позиции
         } else {
-            console.warn(`Tree ${name ? name : `Tree_${item}`} not found.`);
+            console.warn(`${model.name} not found.`);
         }
     }
-    toDefault(tree) {
+    toDefault(tree: THREE.Object3D) {
         tree.position.set(0, 0, 0)
         tree.rotation.x = -Math.PI / 2
         tree.scale.set(1, 1, 1)
     }
-    loadModel() {
 
-    }
-    _getRandomArbitrary(min, max) {
+    _getRandomArbitrary(min: number, max: number) {
         return Math.round(Math.random() * (max - min) + min);
     }
 
-    _setHeight(obj, targetHeight) {
+    _setHeight(obj: THREE.Object3D, targetHeight: number) {
         // Вычисление ограничивающего прямоугольника для всей группы
         const boundingBox = new THREE.Box3().setFromObject(obj);
         // Размеры модели
