@@ -6,13 +6,13 @@ class TextureLoaderUtils {
     constructor() {
     }
 
-    setPath(path:string) {
+    setPath(path) {
 
         this.textureLoader.setPath(path);
         return this;
     }
 
-    async loadTexture(url:string) {
+    async loadTexture(url) {
         return new Promise((resolve, reject) => {
             this.textureLoader.load(url, resolve, undefined, reject);
         });

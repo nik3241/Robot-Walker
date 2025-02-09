@@ -12,6 +12,8 @@
   "dependencies": {
     "@dimforge/rapier3d": "^0.14.0",
     "babel-loader": "^9.2.1",
+    "cannon": "^0.6.2",
+    "cannon-es": "^0.20.0",
     "robot_walker": "file:",
     "three": "^0.172.0"
   },

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 
 export class GameRenderer extends THREE.WebGLRenderer {
-    constructor(parameters?: THREE.WebGLRendererParameters) {
+    constructor(parameters) {
         super(parameters)
         this.shadowMap.enabled = true;
     }
