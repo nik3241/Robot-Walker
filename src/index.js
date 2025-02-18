@@ -84,14 +84,14 @@ async function main() {
 
     // Добавляю землю и воду
 
-    // let width = 500, height = 500, kSegments = 16
+    let width = 500, height = 500, kSegments = 16
 
-    // const terrain = new Terrain(width, height, kSegments)
-    // await terrain.__init__()
-    // terrain.visible = false
+    const terrain = new Terrain(width, height, kSegments)
+    await terrain.__init__()
+    terrain.visible = false
 
-    // objectFolder.add(terrain, "visible").name("Земля")
-    // myGame.objects.add(terrain)
+    objectFolder.add(terrain, "visible").name("Земля")
+    myGame.objects.add(terrain)
 
 
 
@@ -101,13 +101,13 @@ async function main() {
 
     myGame.objects.add(bot)
     await bot.loadModel()
-
+{
     generalFolder.add(bot.position, 'x')
     generalFolder.add(bot.position, 'y')
     generalFolder.add(bot.position, 'z')
     generalFolder.add(bot.rotation, 'x')
     generalFolder.add(bot.rotation, 'y')
-    generalFolder.add(bot.rotation, 'z')
+    generalFolder.add(bot.rotation, 'z')}
 
     objectFolder.add(bot, "visible").name("робот")
 
@@ -116,9 +116,6 @@ async function main() {
         .add(new THREE.AxesHelper(3))
         .add(myGame.lights.children.at(-1))
     myGame.controls.push(bot.controls)
-
-
-
     myGame.addPhisicsBody(bot.body, 'bot')
 
     // PLANE
@@ -257,8 +254,8 @@ async function main() {
         return result
     }
     const boxes = generateBoxes()
-    const Icosahedrons =  generateIcosahedron() 
-    const TorusKnots = 0//generateTorusKnot(2)
+    const Icosahedrons = generateIcosahedron()
+    const TorusKnots = generateTorusKnot(0)
 
     // куб
     const cubeSize = 1

@@ -22,9 +22,6 @@ export class BotModel extends THREE.Mesh {
             angularDamping: 0.9,
             angularFactor: new CANNON.Vec3(0, 1, 0)
         })
-
-
-
         return this
     }
     async loadModel() {
@@ -33,13 +30,7 @@ export class BotModel extends THREE.Mesh {
 
         // выгружаем анимации
         this.animations.push(...glb.animations)
-        // this.object.animations.push(...glb.animations)
-
         this.add(glb.scene) // группа с самим роботом
-
-        // развернулмодель и поставил в центре карты
-        // this.rotation.y = Math.PI
-        // this.position.set(0, 0, 0)
 
         // получение материалов модели
         this.traverse(object => {
@@ -47,7 +38,6 @@ export class BotModel extends THREE.Mesh {
             // это меш
             if (object.isMesh) {
                 // добавляю уникальные материалы (ссылки на метериалы)
-
                 this.materials.add(object.material)
 
                 // настраиваю тени мешу
@@ -56,31 +46,15 @@ export class BotModel extends THREE.Mesh {
             }
         })
 
-        // let tempVector = new THREE.Vector3(1, 5, 2)
-        // console.log('tempVector', tempVector)
-        // let vec = new CANNON.Vec3()
-        // console.log('vec', vec)
-        // vec.set(tempVector.x, tempVector.y, tempVector.z)
-        // console.log('vec2', vec)
-
         this.addPhysicalBody()
         this.controls = new BotControls(this)
-
     }
 
     addPhysicalBody() {
         const colliderShape = new CANNON.Sphere(0.75)
         this.body.addShape(colliderShape, new CANNON.Vec3(0, 0.75, 0))
-        // this.body.addShape(colliderShape, new CANNON.Vec3(0, 1.5, 0))
         this.body.position.set(0, 2, 0)
-        // this.body.initQuaternion = new CANNON.Quaternion()
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI)
-        // this.body.velocity = new CANNON.Vec3(100, 1, 0)
-        // this.body.applyImpulse(
-        //     // new CANNON.Vec3(1000, 1, 0)
-        //     // new CANNON.Vec3(0, 0, 0)
-        // )
-        // .setFromEuler(3, Math.PI / 2, Math.PI / 2,"YZX")
     }
 
     update(delta) {

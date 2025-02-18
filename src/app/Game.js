@@ -8,7 +8,7 @@ import { GameCamera } from "./objects/GameCamera"
 import { GameRenderer } from "./objects/GameRenderer"
 import { GameHelpers } from "./objects/GameHelpers"
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import keyList from "./utils/keyList";
+import keyList from "../../temp/keyList";
 
 const shortKeyList = [
     "KeyW",

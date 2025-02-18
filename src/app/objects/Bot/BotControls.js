@@ -1,8 +1,6 @@
 
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { GameCamera } from '../GameCamera';
 class BotControls {
 
     constructor(object, animations = []) {
@@ -205,11 +203,9 @@ class BotControls {
     }
 
     onDocumentMouseWheel(e) {
-        // console.log(this.object.game.camera)
-        // console.log(this.object.game.camera)
         e.preventDefault()
         const v = this.object.game.camera.position.z + e.deltaY * 0.005
-        if (v >= 0.5 && v <= 5) {
+        if (v >= 0.5 && v <= 50) {
             this.object.game.camera.position.z = v
         }
     }
@@ -261,10 +257,7 @@ class BotControls {
         if (this.keyboard["KeyW"] && !this.keyboard["KeyS"]) {
             this.isAccelerating = true
             this.movement += this.acceleration * delta
-            // ограничиваем максимальную скорость вперед
-            // if (this.movement >= this.maxSpeedForward) {
-            //     this.movement = this.maxSpeedForward
-            // }
+
             if (this.object.body.velocity.length() >= this.maxSpeedForward) {
                 this.object.body.velocity.normalize()
                 this.object.body.velocity.scale(this.maxSpeedForward)
@@ -275,10 +268,7 @@ class BotControls {
             this.isAccelerating = true
             this.movement -= this.acceleration * delta
 
-            // ограничиваем максимальную скорость вперед
-            // if (this.movement <= -this.maxSpeedBackward) {
-            //     this.movement = -this.maxSpeedBackward
-            // }
+
             if (this.object.body.velocity.length() <= -this.maxSpeedBackward) {
                 this.object.body.velocity.normalize()
                 this.object.body.velocity.scale(-this.maxSpeedBackward)
@@ -286,21 +276,7 @@ class BotControls {
         }
 
         this.stop(delta)
-        console.log('!!!!!! movement', this.movement)
-        console.log('!!!!!! velocity', this.object.body.velocity)
-        // this.object.body.position.vadd(new CANNON.Vec3(
-        //     this.movement.x,
-        //     this.movement.y,
-        //     this.movement.z))
-        // this.velocity= new CANNON.Vec3(
-        //     this.movement.x,
-        //     this.movement.y,
-        //     this.movement.z,
-        // )
-
-        // this.movement.setLength(delta * 10)
-
-        // apply camera rotation to inputVelocity
+       
         this.euler.y = this.yaw.rotation.y + Math.PI
         this.euler.order = 'XYZ'
         this.quat.setFromEuler(this.euler)
@@ -316,108 +292,12 @@ class BotControls {
             this.quat.z,
             this.quat.w
         )
-        //ВАРИАНТ С ДОБАВЛЕНИЕМ ИМПУЛЬСА
-        // this.object.body.applyImpulse(new CANNON.Vec3(
-        //     moveVec.x,
-        //     moveVec.y,
-        //     moveVec.z
-        // ),
-        //     // new CANNON.Vec3(0, 0, 0)
-        // )
 
         this.object.body.velocity.set(
-            // new CANNON.Vec3(
-
             moveVec.x,
             moveVec.y,
             moveVec.z
-        // ),
-
-            // new CANNON.Vec3(0, 0, 0)
         )
-
-        // ЧЕРЕЗ ОБНОВЕНИЕ ПОЗИЦИИ ШУСТРО СЛИШКОМ
-        // this.object.body.position.x += moveVec.x
-        // this.object.body.position.y += moveVec.y
-        // this.object.body.position.z += moveVec.z
-
-
-
-        // this.velocity
-        //     .vmul(this.movement)
-        // console.log("moveVec", moveVec)
-        // console.log("velocity", this.velocity)
-
-        // this.velocity
-
-
-        //       this.movement.applyQuaternion(this.quat)
-
-        // this.object.body.velocity.set(
-        //     this.movement.x,
-        //     this.movement.y,
-        //     this.movement.z,)
-        // if (this.keyboard["KeyW"] && !this.keyboard["KeyS"]) {
-        //     this.isAccelerating = true
-        //     this.movement.z += this.acceleration * delta
-
-        //     // ограничиваем максимальную скорость вперед
-        //     if (this.movement.z >= this.maxSpeedForward) {
-        //         this.movement.z = this.maxSpeedForward
-        //     }
-        // }
-        // // назад и не в перед
-        // if (this.keyboard["KeyS"] && !this.keyboard["KeyW"]) {
-        //     this.isAccelerating = true
-        //     this.movement.z -= this.acceleration * delta
-
-        //     // ограничиваем максимальную скорость вперед
-        //     if (this.movement.z <= -this.maxSpeedBackward) {
-        //         this.movement.z = -this.maxSpeedBackward
-        //     }
-        // }
-        // влево, и не в право
-        // if (this.keyboard["KeyA"] && !this.keyboard["KeyD"]) {
-        //     // +       
-        //     this.angleOfRotation += this.rotateSpeed
-
-        //     this.object.rotation.y = this.angleOfRotation;
-        // }
-        // // вправо и не в лево
-        // if (this.keyboard["KeyD"] && !this.keyboard["KeyA"]) {
-        //     // -
-        //     this.angleOfRotation -= this.rotateSpeed
-
-        //     this.object.rotation.y = this.angleOfRotation;
-        // }
-
-        // // сильное ускорение (гипердрайв) 
-        // if (this.keyboard["ShiftLeft"]) {
-        //     this.acceleration = this.accelerationDefault * 1.5
-        // } else {
-        //     this.acceleration = this.accelerationDefault
-        // }
-
-        // // сильное торможение (ручник)
-        // if (this.keyboard["Space"]) {
-        //     // this.movement.z = 0
-        //     this.decceleration = this.deccelerationDefault * 1.5
-        // } else {
-        //     this.decceleration = this.deccelerationDefault
-        // }
-        // this.stop(delta)
-        // this.object.translateZ(this.movement.z * delta)
-        // this.object.rotation.y = this.angleOfRotation
-
-
-
-
-        // if (this.keyboard["KeyF"]) {
-        //     this.object.translateY(-this.movement.z * delta)
-        // }
-        // if (this.keyboard["KeyR"]) {
-        //     this.object.translateY(this.movement.z * delta)
-        // }
     }
 
     // Плавная остановка
@@ -465,39 +345,7 @@ class BotControls {
         let pos =
             this.pivot.position.setFromMatrixPosition(v)
 
-        // console.log('this.object', this.object.position)
-        // console.log('this.object.body.position', this.object.body.position)
-        // console.log('pivot', this.pivot.position, this.pivot.rotation)
-        // console.log(this.yaw.position, this.yaw.rotation)
-        // console.log(this.pitch.position, this.pitch.rotation)
-
-        // console.log(this.object.game.camera.position, this.object.game.camera.rotation)
-        // console.log("this.object", pos)
     }
 
-
-    // подписка на слежение за объектом, 
-    // в update производится пересчет положения, поворота и направления камеры
-    // followPlayer(camera, offsetView) {
-    //     if (camera.isCamera) {
-    //         this.isFollowPlayer = true
-    //         this.camera = camera
-    //         this.cameraOffsetTarget = new THREE.Vector3(0, 2, 0) // немного над объектом
-    //         this.cameraOffsetPosition = new THREE.Vector3(0, 2.5, 5)
-
-    //         this.cameraControl = new OrbitControls(camera)
-    //         // camera.lookAt(this.object.position)
-    //     }
-    // }
-    // // полностью удаляю камеру из конроллера и прекращаю отслеживать объект
-    // unfollowPlayer() {
-    //     this.camera = null
-    //     this.isFollowPlayer = false
-    // }
-
-    // // остановка только отслеживания объекта, камера остается в контроллере
-    // stopFollowPlayer() {
-    //     this.isFollowPlayer = false
-    // }
 }
 export { BotControls }
