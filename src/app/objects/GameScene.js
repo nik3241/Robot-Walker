@@ -14,9 +14,9 @@ export class GameScene extends THREE.Scene {
         this.environment = environmentTexture
         this.background = environmentTexture
 
-
+        this.lights = new GameLight()
         // освещение
-        this.add(new GameLight())
+        this.add(this.lights)
 
     }
 }

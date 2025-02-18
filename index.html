@@ -35,41 +35,10 @@
         </footer>
 
     </main>
-    <audio loop="" autoplay="" id="myTune">
+    <audio loop="" autoplay="true" id="myTune">
         <source src="public/media/auroraopening.ogg" type="audio/ogg">
     </audio>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var myAudio = document.getElementById("myTune");
-            var muted = false
-            //console.log(localStorage)
-            if (localStorage.muted == "true") {
-                myAudio.volume = 0.4;
-                muted = true;
-            }
-            if (!muted)
-                myAudio.volume = 0.4;
-            myAudio.play();
-        });
 
-        function aud_play_pause() {
-            var myAudio = document.getElementById("myTune");
-            if (myAudio.paused) {
-                myAudio.volume = 0.4;
-                myAudio.play();
-                localStorage.setItem('muted', false);
-            } else {
-                myAudio.volume = 0.4;
-                myAudio.pause();
-                localStorage.setItem('muted', true);
-            }
-        }
-        function play() {
-            var myAudio = document.getElementById("myTune");
-            myAudio.volume = 0.4;
-            myAudio.play();
-        }
-    </script>
     <script src="./src/index.js" type="module" defer></script>
 </body>
 

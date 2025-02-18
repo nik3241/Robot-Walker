@@ -1,6 +1,7 @@
 "use strict"
 import { Clock, Group, Vector2 } from "three"
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import * as CANNON from 'cannon-es';
 
 import { GameScene } from "./objects/GameScene"
 import { GameCamera } from "./objects/GameCamera"
@@ -38,13 +39,11 @@ export class Game {
     scene = new GameScene()
     camera = new GameCamera()
     renderer = new GameRenderer({ canvas: this.canvas, antialias: true })
-    lights = this.scene.getObjectByName("lights")
+    lights = this.scene.lights
     helpers = new GameHelpers()
     objects = new Group()
     clock = new Clock()
-    controls = [
-        new FirstPersonControls(this.camera, this.canvas),
-    ]
+    controls = []
     menu
     startBtn
     isPointerLocked = false
@@ -52,7 +51,16 @@ export class Game {
     // высота и ширина изображения рендера
     renderViewPort = new Vector2(0, 0)
 
+    phisicsWorld = new CANNON.World({
+        gravity: new CANNON.Vec3(0, -8, 0)
+    })
+    phisicsBodys = new Map()
+    nextBodyIndex = 0
+
+
     constructor(domGame) {
+
+
         // console.log(this.scene.getObjectByName("lights"))
         if (domGame) {
             this.domElement = domGame
@@ -83,8 +91,8 @@ export class Game {
             this.domElement.appendChild(this.statistics)
             this.statistics.classList.toggle("hidden")
 
-            this.displayKeyHelper()
-            this.displayViewportHelper()
+            this.displayKeyHelper() // нажатие кнопок
+            this.displayViewportHelper() // рамочка на экране
 
             document.querySelector("#game .viewport-wrapper ").insertAdjacentHTML('afterbegin', `<div id="menuPanel">
                 <button id="startButton">Click to Start</button>
@@ -93,17 +101,13 @@ export class Game {
             this.startBtn = document.getElementById('startButton')
             this.startBtn.addEventListener('click', () => { this.canvas.requestPointerLock(); })
             this.isPointerLocked = false
-            this.displayMenuStart()
+
 
             this.gui = new GUI({ container: this.domElement.querySelector(".gui") })
 
 
         }
 
-        // настраиваем контролер от первого лица
-        this.controls[0].movementSpeed = 2;
-        this.controls[0].lookSpeed = 0.2;
-        this.controls[0].activeLook = !true
 
         // добавление на сцену хелперов и объектов 
         this.scene.name = "my games scene"
@@ -120,24 +124,26 @@ export class Game {
     displayMenuStart() {
 
         document.addEventListener('pointerlockchange', () => {
-            const bot = this.objects.children[1]
-            if (document.pointerLockElement === this.canvas) {
-                this.isPointerLocked = true
+            const bot = this.scene.getObjectByName("BotModel")
+            console.log(bot)
+            if (bot)
+                if (document.pointerLockElement === this.canvas) {
+                    this.isPointerLocked = true
 
-                this.startBtn.style.display = 'none'
-                this.menu.style.display = 'none'
+                    this.startBtn.style.display = 'none'
+                    this.menu.style.display = 'none'
 
-                this.controls[1].connect()
+                    bot.controls.connect()
 
-            } else {
-                this.menu.style.display = 'block'
-                this.isPointerLocked = false
-                this.controls[1].disconnect()
+                } else {
+                    this.menu.style.display = 'block'
+                    this.isPointerLocked = false
+                    bot.controls.disconnect()
 
-                setTimeout(() => {
-                    this.startBtn.style.display = 'block'
-                }, 1000)
-            }
+                    setTimeout(() => {
+                        this.startBtn.style.display = 'block'
+                    }, 1000)
+                }
         })
     }
 
@@ -222,5 +228,20 @@ export class Game {
 
         // console.log(message)
         return index;
+    }
+    addPhisicsBody(body, name) {
+        let lastbody
+        if (name)
+            lastbody = this.phisicsBodys.set(name, body)
+        else
+            lastbody = this.phisicsBodys.set(this.nextBodyIndex, body)
+
+        this.nextBodyIndex += 1
+
+
+
+        this.phisicsWorld.addBody(body)
+        body.sleepState
+        return lastbody
     }
 }

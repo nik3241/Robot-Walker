@@ -17,20 +17,18 @@ export class GameLight extends THREE.Group {
 
 
         const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(-5, 110, 1)
+        pointLight.position.set(-5, 5, 1)
         pointLight.castShadow = this.flagCastShadow;
         pointLight.name = pointLight.type
 
         // light blue
-        const pointLight2 = new THREE.PointLight(0xffffff, 1.8);
-        pointLight2.position.set(100, 60, -100);
+        const pointLight2 = new THREE.PointLight(0xffffff, 1);
+        pointLight2.position.set(10, 7, 3);
         // Включаем создание динамических теней
         pointLight2.castShadow = this.flagCastShadow;
-        pointLight.name = pointLight.type
+        pointLight2.name = pointLight2.type
 
         const directionLight = new THREE.DirectionalLight(0xffffff, 0.5)
-        pointLight.name = pointLight.type
-
         directionLight.position.set(0, 1, 0).multiplyScalar(100)
         directionLight.target.position.set(-0.8, 0, -0.5).multiplyScalar(100)
         directionLight.castShadow = this.flagCastShadow
